@@ -82,3 +82,22 @@
 {"level":"info","message":"Verifying API key: abc123xyz4567890","timestamp":"2025-06-27 11:16:24"}
 {"level":"info","message":"API key valid, user_id: 1","timestamp":"2025-06-27 11:16:24"}
 {"level":"info","message":"Fetched 1 documents for user 1","timestamp":"2025-06-27 11:16:24"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-27 16:36:28"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-27 16:36:59"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-27 16:40:54"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-27 16:42:23"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-27 16:43:55"}
+{"level":"info","message":"1. Starting server initialization...","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"2. Loading environment configuration...","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"3. Environment loaded: PORT=3000, DATABASE_URL=./src/db/legal_documents.db, REDIS_URL=redis://localhost:6379","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"4. Initializing SQLite database...","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"Resolved database path: ./src/db/legal_documents.db","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"5. SQLite database initialized","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"6. Connecting to Redis...","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"7. Redis connected","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"8. Creating Express app...","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"Session middleware configured successfully","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"9. Express app created","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"10. Starting server on port 3000...","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"11. Server running on http://localhost:3000","timestamp":"2025-06-27 16:43:56"}
