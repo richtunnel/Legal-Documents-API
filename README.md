@@ -13,8 +13,9 @@ A Node.js Express API for managing legal documents, with user authentication, AP
   - [Environment Variables](#environment-variables)
   - [Database Schema](#database-schema)
   - [API Endpoints](#api-endpoints)
-    - [Authentication Routes](#authentication-routes)
-  - [Testing with Postman](#testing-with-postman)
+    - [Document Routes](#document-routes)
+  - [Authentication](#authentication)
+  - [Running the Application](#running-the-application)
 
 ## Project Overview
 
@@ -22,7 +23,6 @@ The Legal Documents API allows users to register, log in, generate API keys, and
 
 - **Base URL**: `http://localhost:3000`
 - **API Version**: `/api/v1`
-- **Project Location**: `/Users/rstokes/Sites/Milestone`
 
 ## Features
 
@@ -61,7 +61,7 @@ The Legal Documents API allows users to register, log in, generate API keys, and
 Install dependencies:
 
 ```bash
-cd /Users/rstokes/Sites/Milestone
+cd Milestone
 npm install
 ```
 
@@ -71,7 +71,7 @@ npm install
    npm install
    ```
 
-2. **Set Up Environment Variables**: Create or update `/Users/rstokes/Sites/Milestone/.env`:
+2. **Set Up Environment Variables**: Create or update `Milestone/.env`:
 
    ```plaintext
    NODE_ENV=development
@@ -97,8 +97,8 @@ npm install
 4. **Initialize Database**: Create `src/db/legal_documents.db`:
 
    ```bash
-   mkdir -p /Users/rstokes/Sites/Milestone/src/db
-   sqlite3 /Users/rstokes/Sites/Milestone/src/db/legal_documents.db
+   mkdir -p /Milestone/src/db
+   sqlite3 /Milestone/src/db/legal_documents.db
    ```
 
    Run:
@@ -140,8 +140,8 @@ npm install
 5. **Create Storage Directory**:
 
    ```bash
-   mkdir -p /Users/rstokes/Sites/Milestone/storage
-   touch /Users/rstokes/Sites/Milestone/storage/test.pdf
+   mkdir -p Milestone/storage
+   touch Milestone/storage/test.pdf
    ```
 
 6. **Compile TypeScript**:
@@ -186,44 +186,27 @@ npm install
 
 ## API Endpoints
 
-### Authentication Routes
-
-- **POST /api/v1/auth/login**
-
-  - Authenticate user and return JWT.
-  - Body:
-
-    ```json
-    {
-      "email": "test@example.com",
-      "password": "password123"
-    }
-    ```
-
-  - Response: `200 OK`
-
-````json
-    {
-      "token": "<jwt-token>",
-      "user": { "id": 1, "email": "test@example.com", "role": "user" }
-    }
-    ```
-
 ### Document Routes
+
 - **POST /api/v1/documents**
+
   - Upload a PDF document.
   - Headers: `x-api-key: <api-key>` or `Authorization: Bearer <jwt-token>`
   - Body: Form-data with `file` (PDF) and `title` (string)
   - Response: `200 OK`
+
     ```json
     { "message": "Document uploaded successfully", "documentId": 1 }
     ```
+
   - Errors: `400 Bad Request`, `401 Unauthorized`
 
 - **GET /api/v1/documents**
+
   - Retrieve all documents for the authenticated user.
   - Headers: `x-api-key: <api-key>` or `Authorization: Bearer <jwt-token>`
   - Response: `200 OK`
+
     ```json
     [
       {
@@ -235,6 +218,7 @@ npm install
       }
     ]
     ```
+
   - Errors: `400 Bad Request`, `401 Unauthorized`
 
 - **GET /api/v1/documents/:id**
@@ -244,16 +228,20 @@ npm install
   - Errors: `400 Bad Request` (Invalid ID), `401 Unauthorized`, `404 Not Found`
 
 ## Authentication
+
 - **JWT**: Obtain via `/api/v1/auth/login`. Use in `Authorization: Bearer <jwt-token>` header.
 - **API Key**: Obtain via `/api/v1/auth/register`. Use in `x-api-key: <api-key>` header (e.g., `x-api-key: abc123xyz4567890`).
 - All document routes require authentication via JWT or API key.
 
 ## Running the Application
+
 1. **Compile TypeScript**:
    ```bash
-   cd /Users/rstokes/Sites/Milestone
+   cd Milestone
    npm run build
-````
+   ```
+
+`````
 
 2. **Start Server**:
 
@@ -300,7 +288,7 @@ npm install
 - **401 Unauthorized ("Invalid token or API key")**:
  - Check `api_keys`:
    ```bash
-   sqlite3 /Users/rstokes/Sites/Milestone/src/db/legal_documents.db "SELECT * FROM api_keys;"
+   sqlite3 Milestone/src/db/legal_documents.db "SELECT * FROM api_keys;"
    ```
  - Insert test key:
    ```sql
@@ -308,7 +296,7 @@ npm install
    ```
  - Verify database path in `logs/combined.log`:
    ```
-   {"level":"info","message":"Resolved database path: /Users/rstokes/Sites/Milestone/src/db/legal_documents.db"}
+   {"level":"info","message":"Resolved database path: Milestone/src/db/legal_documents.db"}
    ```
  - Test `/verify-api-key` endpoint.
 
@@ -317,10 +305,10 @@ npm install
    ```bash
    npm run build
    ```
- - Check: `ls -l /Users/rstokes/Sites/Milestone/dist/config/database.js`
+ - Check: `ls -l Milestone/dist/config/database.js`
 
 - **Database Issues**:
- - Verify: `ls -l /Users/rstokes/Sites/Milestone/src/db/legal_documents.db`
+ - Verify: `ls -l Milestone/src/db/legal_documents.db`
  - Recreate database (see [Setup Instructions](#setup-instructions)).
 
 - **Logs**:
@@ -342,4 +330,4 @@ npm install
 
 ## License
 MIT License. See `LICENSE` file for details.
-````
+`````
