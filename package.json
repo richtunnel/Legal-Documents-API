@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "test": "jest",
     "start": "ts-node src/server.ts",
     "start:tsx": "tsx src/server.ts",
     "build": "tsc",
     "start:prod": "node dist/server.js"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
   },
   "keywords": [],
   "author": "",
@@ -19,12 +24,16 @@
     "@types/express": "^5.0.3",
     "@types/express-session": "^1.18.2",
     "@types/express-validator": "^2.20.33",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^1.4.13",
     "@types/node": "^24.0.4",
     "@types/sqlite3": "^3.1.11",
+    "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/uuid": "^10.0.0",
+    "jest": "^30.0.3",
+    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
@@ -54,6 +63,7 @@
     "redis": "^5.5.6",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
+    "supertest": "^7.1.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0",
