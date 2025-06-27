@@ -11,14 +11,33 @@ const auth_1 = require("../middleware/auth");
 const validate_1 = require("../middleware/validate");
 const logger_1 = require("../utils/logger");
 const documentController_1 = require("../controllers/documentController");
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const redis_1 = require("../config/redis");
+const rate_limit_redis_1 = __importDefault(require("rate-limit-redis"));
 // Configure multer with memory storage
 const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
+// Rate limiter for uploads
+const uploadRateLimiter = (0, express_rate_limit_1.default)({
+    store: new rate_limit_redis_1.default({
+        sendCommand: async (...args) => {
+            return redis_1.redisClient.sendCommand(args);
+        },
+        prefix: "rate-limit:documents:upload:",
+    }),
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // 10 uploads per IP
+    message: { message: "Too many document uploads, please try again later" },
+    handler: (req, res, next, options) => {
+        logger_1.logger.warn(`Upload rate limit exceeded for IP ${req.ip}`);
+        res.status(options.statusCode).json(options.message);
+    },
+});
 function documentRoutes(db) {
     const router = (0, express_1.Router)();
     // Apply authMiddleware to all routes
     router.use((0, auth_1.authMiddleware)(db));
     // Upload document route
-    router.post("/", upload.single("file"), validate_1.validateDocument, validate_1.validate, (req, res, next) => {
+    router.post("/", uploadRateLimiter, upload.single("file"), validate_1.validateDocument, validate_1.validate, (req, res, next) => {
         (0, documentController_1.uploadDocumentController)(req, res, db).catch((error) => {
             logger_1.logger.error(`Upload document failed: ${error.message}`);
             res.status(400).json({ message: error.message });

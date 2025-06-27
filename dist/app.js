@@ -18,6 +18,8 @@ const webhook_routes_1 = require("./routes/webhook.routes");
 const errors_1 = require("./middleware/errors");
 const logger_1 = require("./utils/logger");
 const env_config_1 = require("./env-config");
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const rate_limit_redis_1 = __importDefault(require("rate-limit-redis"));
 function createApp(db) {
     const app = (0, express_1.default)();
     // Security middleware
@@ -55,6 +57,21 @@ function createApp(db) {
         logger_1.logger.error(`Session middleware setup failed: ${error.message}`);
         throw new Error(`Session setup failed: ${error.message}`);
     }
+    const documentRateLimiter = (0, express_rate_limit_1.default)({
+        store: new rate_limit_redis_1.default({
+            sendCommand: async (...args) => {
+                return redis_1.redisClient.sendCommand(args);
+            },
+            prefix: "rate-limit:documents:",
+        }),
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // 100 requests per IP
+        message: { message: "Too many requests to document endpoints, please try again later" },
+        handler: (req, res, next, options) => {
+            logger_1.logger.warn(`Rate limit exceeded for IP ${req.ip} on ${req.path}`);
+            res.status(options.statusCode).json(options.message);
+        },
+    });
     // Routes
     app.use("/api/v1/auth", (0, auth_routes_1.default)(db));
     app.use("/api/v1/documents", (0, document_routes_1.default)(db));
