@@ -76,3 +76,9 @@
 {"level":"info","message":"Verifying API key: abc123xyz4567890","timestamp":"2025-06-27 09:11:08"}
 {"level":"info","message":"API key valid, user_id: 1","timestamp":"2025-06-27 09:11:08"}
 {"level":"info","message":"Fetched 1 documents for user 1","timestamp":"2025-06-27 09:11:08"}
+{"level":"info","message":"Verifying API key: abc123xyz4567890","timestamp":"2025-06-27 11:16:20"}
+{"level":"info","message":"API key valid, user_id: 1","timestamp":"2025-06-27 11:16:20"}
+{"level":"info","message":"Fetched 1 documents for user 1","timestamp":"2025-06-27 11:16:20"}
+{"level":"info","message":"Verifying API key: abc123xyz4567890","timestamp":"2025-06-27 11:16:24"}
+{"level":"info","message":"API key valid, user_id: 1","timestamp":"2025-06-27 11:16:24"}
+{"level":"info","message":"Fetched 1 documents for user 1","timestamp":"2025-06-27 11:16:24"}

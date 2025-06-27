@@ -1,7 +1,7 @@
-import express, { Express } from "express";
+import express, { Express, Response, Request } from "express";
 import session from "express-session";
 import { redisClient } from "./config/redis";
-import { RedisStore } from "connect-redis";
+import { RedisStore as ConnectRedisStore } from "connect-redis";
 import helmet from "helmet";
 import compression from "compression";
 import swaggerUi from "swagger-ui-express";
@@ -13,6 +13,9 @@ import { errorMiddleware } from "./middleware/errors";
 import { Database } from "sqlite";
 import { logger } from "./utils/logger";
 import { config } from "./env-config";
+import rateLimit from "express-rate-limit";
+import RedisStore from "rate-limit-redis";
+import { ErrorResponse } from "./types/types";
 
 export default function createApp(db: Database): Express {
   const app = express();
@@ -41,7 +44,7 @@ export default function createApp(db: Database): Express {
   try {
     app.use(
       session({
-        store: new RedisStore({ client: redisClient }),
+        store: new ConnectRedisStore({ client: redisClient }),
         secret: config.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
@@ -58,6 +61,22 @@ export default function createApp(db: Database): Express {
     logger.error(`Session middleware setup failed: ${(error as Error).message}`);
     throw new Error(`Session setup failed: ${(error as Error).message}`);
   }
+
+  const documentRateLimiter = rateLimit({
+    store: new RedisStore({
+      sendCommand: async (...args: string[]) => {
+        return redisClient.sendCommand(args);
+      },
+      prefix: "rate-limit:documents:",
+    }),
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // 100 requests per IP
+    message: { message: "Too many requests to document endpoints, please try again later" } as ErrorResponse,
+    handler: (req, res, next, options) => {
+      logger.warn(`Rate limit exceeded for IP ${req.ip} on ${req.path}`);
+      res.status(options.statusCode).json(options.message);
+    },
+  });
 
   // Routes
   app.use("/api/v1/auth", authRoutes(db));

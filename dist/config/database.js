@@ -9,9 +9,11 @@ const sqlite_1 = require("sqlite");
 const promises_1 = __importDefault(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
 const env_config_1 = require("../env-config");
+const logger_1 = require("../utils/logger");
 async function initDatabase() {
     try {
         const dbPath = env_config_1.config.DATABASE_URL || path_1.default.resolve(__dirname, "../db/legal_documents.db");
+        logger_1.logger.info(`Resolved database path: ${dbPath}`);
         console.log("Opening database at:", dbPath);
         await promises_1.default.mkdir(path_1.default.dirname(dbPath), { recursive: true });
         const db = await (0, sqlite_1.open)({
