@@ -101,3 +101,31 @@
 {"level":"info","message":"9. Express app created","timestamp":"2025-06-27 16:43:56"}
 {"level":"info","message":"10. Starting server on port 3000...","timestamp":"2025-06-27 16:43:56"}
 {"level":"info","message":"11. Server running on http://localhost:3000","timestamp":"2025-06-27 16:43:56"}
+{"level":"info","message":"Verifying API key: abc123xyz4567890","timestamp":"2025-06-27 16:45:37"}
+{"level":"info","message":"API key valid, user_id: 1","timestamp":"2025-06-27 16:45:37"}
+{"level":"info","message":"Fetched 1 documents for user 1","timestamp":"2025-06-27 16:45:37"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-27 16:50:20"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-29 08:56:52"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-29 08:57:01"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-29 09:34:06"}
+{"level":"info","message":"server initialization...","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Loading environment configuration...","timestamp":"2025-06-29 09:34:07"}
+{"DATABASE_URL":"***configured***","NODE_ENV":"development","PORT":"3000","REDIS_URL":"***configured***","level":"info","message":"Environment loaded:","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Initializing SQLite database...","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Resolved database path: ./src/db/legal_documents.db","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"SQLite database initialized successfully","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Connecting to Redis...","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Redis connected successfully","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Creating Express app...","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Session middleware configured successfully with Redis store","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Rate limiter configured with Redis store","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Express app created successfully","timestamp":"2025-06-29 09:34:07"}
+{"level":"info","message":"Starting HTTP server on port 3000...","timestamp":"2025-06-29 09:34:07"}
+{"endpoints":{"auth":"http://localhost:3000/api/v1/auth","docs":"http://localhost:3000/api-docs","documents":"http://localhost:3000/api/v1/documents","health":"http://localhost:3000/health","webhooks":"http://localhost:3000/api/v1/webhooks"},"level":"info","message":"🎯 Server initialization completed successfully","services":{"database":"connected","http":"running","redis":"connected"},"timestamp":"2025-06-29 09:34:07"}
+{"apiDocs":"http://localhost:3000/api-docs","environment":"development","health":"http://localhost:3000/health","level":"info","message":"Server running successfully!","port":"3000","redis":"connected","timestamp":"2025-06-29 09:34:07","url":"http://localhost:3000"}
+{"level":"info","message":"Verifying API key: abc123xyz4567890","timestamp":"2025-06-29 09:35:58"}
+{"level":"info","message":"API key valid, user_id: 1","timestamp":"2025-06-29 09:35:58"}
+{"level":"info","message":"Fetched 1 documents for user 1","timestamp":"2025-06-29 09:35:58"}
+{"level":"info","message":"Fetched 1 documents for user 1","timestamp":"2025-06-29 09:35:58"}

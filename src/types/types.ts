@@ -1,10 +1,35 @@
 import { Request } from "express";
 import { Session, SessionData } from "express-session";
+import { RedisClientType } from "redis";
+import { Database } from "sqlite";
 
 declare module "express-session" {
   interface SessionData {
     user?: { id: number; email?: string; role?: string };
   }
+}
+
+export interface RateLimiterOptions {
+  redisClient?: RedisClientType;
+  windowMs?: number;
+  max?: number;
+  keyGenerator?: (req: Request) => string;
+  skipSuccessfulRequests?: boolean;
+  skipFailedRequests?: boolean;
+}
+
+export interface RateLimitStatus {
+  limit: number;
+  remaining: number;
+  reset: string;
+  current: number;
+}
+
+export interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+  };
 }
 
 export interface User {
@@ -28,6 +53,8 @@ export interface Document {
   title: string;
   blob_path: string;
   created_at?: string;
+  mimeType?: string;
+  size?: string;
 }
 
 export interface Webhook {
@@ -35,6 +62,12 @@ export interface Webhook {
   user_id: number;
   url: string;
   event_type: string;
+}
+
+export interface ServerContext {
+  db: Database | null;
+  server: any;
+  redisConnected: boolean;
 }
 
 export interface AuthResponse {

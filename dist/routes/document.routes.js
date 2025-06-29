@@ -12,11 +12,10 @@ const validate_1 = require("../middleware/validate");
 const logger_1 = require("../utils/logger");
 const documentController_1 = require("../controllers/documentController");
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
-const redis_1 = require("../config/redis");
 const rate_limit_redis_1 = __importDefault(require("rate-limit-redis"));
+const redis_1 = require("../config/redis");
 // Configure multer with memory storage
 const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
-// Rate limiter for uploads
 const uploadRateLimiter = (0, express_rate_limit_1.default)({
     store: new rate_limit_redis_1.default({
         sendCommand: async (...args) => {
