@@ -1,7 +1,6 @@
 import { Database } from "sqlite";
 import { createDocument, getDocuments, getDocumentById } from "../models/documents.model";
 import { saveToStorage, getFromStorage } from "./storage.services";
-import { WebhookService } from "./webhooks.services";
 import { Document } from "../types/types";
 import { EventType, DocumentEvent } from "../types/events";
 import { logger } from "../utils/logger";
@@ -10,7 +9,7 @@ import { EventBus } from "../infrastructure/eventBus";
 export class DocumentService {
   private webhookService: any;
 
-  constructor(private db: Database, private eventBus: EventBus, private storageService: any, webhookService: WebhookService | null, private logger: any) {
+  constructor(private db: Database, private eventBus: EventBus, private storageService: any, webhookService: any = null, private logger: any) {
     this.webhookService = webhookService;
   }
 
@@ -219,9 +218,13 @@ export class DocumentService {
   // Async webhook triggering to not block main operations
   private async triggerWebhookAsync(userId: number, eventType: string, payload: any): Promise<void> {
     try {
-      await this.webhookService.triggerWebhook(userId, eventType, payload);
+      if (this.webhookService) {
+        await this.webhookService.triggerWebhook(userId, eventType, payload);
+      } else {
+        this.logger.debug("Webhook service not available, skipping webhook trigger");
+      }
     } catch (error) {
-      logger.warn(`Webhook trigger failed: ${(error as Error).message}`, {
+      this.logger.warn(`Webhook trigger failed: ${(error as Error).message}`, {
         userId,
         eventType,
         payload,

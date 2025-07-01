@@ -19,7 +19,7 @@ export class AuthService {
 
       if (!user || !(await bcrypt.compare(password, user.password))) {
         // Publish failed login event
-        await this.publishAuthEvent(0, "login", ipAddress, userAgent, false, "Invalid credentials");
+        // await this.publishAuthEvent(0, "login", ipAddress, userAgent, false, "Invalid credentials");
         throw new Error("Invalid credentials");
       }
 
@@ -30,7 +30,7 @@ export class AuthService {
       const tokens = await this.generateTokenPair(user.id);
 
       // Publish successful login event
-      await this.publishAuthEvent(user.id, "login", ipAddress, userAgent, true);
+      // await this.publishAuthEvent(user.id, "login", ipAddress, userAgent, true);
 
       logger.info("User logged in successfully", {
         userId: user.id,
@@ -127,50 +127,50 @@ export class AuthService {
       const result = await findApiKey(this.db, apiKey);
       if (!result) {
         // Publish failed API key event
-        await this.eventBus.publish({
-          id: "",
-          type: EventType.USER_LOGIN,
-          timestamp: "",
-          version: "1.0",
-          source: "auth-service",
-          correlationId: "",
-          payload: {
-            userId: 0,
-            action: "api_key_verification",
-            ipAddress: ipAddress || "unknown",
-            userAgent: "api",
-            success: false,
-            reason: "Invalid API key",
-          },
-          metadata: {
-            apiKeyPrefix: apiKey.substring(0, 8),
-          },
-        } as AuthEvent);
+        // await this.eventBus.publish({
+        //   id: "",
+        //   type: EventType.USER_LOGIN,
+        //   timestamp: "",
+        //   version: "1.0",
+        //   source: "auth-service",
+        //   correlationId: "",
+        //   payload: {
+        //     userId: 0,
+        //     action: "api_key_verification",
+        //     ipAddress: ipAddress || "unknown",
+        //     userAgent: "api",
+        //     success: false,
+        //     reason: "Invalid API key",
+        //   },
+        //   metadata: {
+        //     apiKeyPrefix: apiKey.substring(0, 8),
+        //   },
+        // } as AuthEvent);
 
         logger.warn(`Invalid API key: ${apiKey.substring(0, 8)}...`);
         throw new Error("Invalid API key");
       }
 
       // Publish successful API key verification
-      await this.eventBus.publish({
-        id: "",
-        type: EventType.USER_LOGIN,
-        timestamp: "",
-        version: "1.0",
-        source: "auth-service",
-        correlationId: "",
-        userId: result.user_id,
-        payload: {
-          userId: result.user_id,
-          action: "api_key_verification",
-          ipAddress: ipAddress || "unknown",
-          userAgent: "api",
-          success: true,
-        },
-        metadata: {
-          apiKeyPrefix: apiKey.substring(0, 8),
-        },
-      } as AuthEvent);
+      // await this.eventBus.publish({
+      //   id: "",
+      //   type: EventType.USER_LOGIN,
+      //   timestamp: "",
+      //   version: "1.0",
+      //   source: "auth-service",
+      //   correlationId: "",
+      //   userId: result.user_id,
+      //   payload: {
+      //     userId: result.user_id,
+      //     action: "api_key_verification",
+      //     ipAddress: ipAddress || "unknown",
+      //     userAgent: "api",
+      //     success: true,
+      //   },
+      //   metadata: {
+      //     apiKeyPrefix: apiKey.substring(0, 8),
+      //   },
+      // } as AuthEvent);
 
       return result.user_id;
     } catch (error) {
@@ -203,24 +203,24 @@ export class AuthService {
       const tokens = await this.generateTokenPair(tokenData.user_id);
 
       // Publish token refresh event
-      await this.eventBus.publish({
-        id: "",
-        type: EventType.TOKEN_REFRESHED,
-        timestamp: "",
-        version: "1.0",
-        source: "auth-service",
-        correlationId: "",
-        userId: tokenData.user_id,
-        payload: {
-          userId: tokenData.user_id,
-          action: "token_refresh",
-          ipAddress: "",
-          userAgent: "",
-          tokenId: tokenData.id,
-          success: true,
-        },
-        metadata: {},
-      } as AuthEvent);
+      // await this.eventBus.publish({
+      //   id: "",
+      //   type: EventType.TOKEN_REFRESHED,
+      //   timestamp: "",
+      //   version: "1.0",
+      //   source: "auth-service",
+      //   correlationId: "",
+      //   userId: tokenData.user_id,
+      //   payload: {
+      //     userId: tokenData.user_id,
+      //     action: "token_refresh",
+      //     ipAddress: "",
+      //     userAgent: "",
+      //     tokenId: tokenData.id,
+      //     success: true,
+      //   },
+      //   metadata: {},
+      // } as AuthEvent);
 
       logger.info("Token refreshed successfully", { userId: tokenData.user_id });
       return tokens;
@@ -246,18 +246,18 @@ export class AuthService {
         throw new Error("Token not found");
       }
 
-      await this.eventBus.publish({
-        id: "",
-        type: EventType.TOKEN_REVOKED,
-        timestamp: "",
-        version: "1.0",
-        source: "auth-service",
-        correlationId: "",
-        metadata: {
-          action: "token_revoked",
-          success: true,
-        },
-      });
+      // await this.eventBus.publish({
+      //   id: "",
+      //   type: EventType.TOKEN_REVOKED,
+      //   timestamp: "",
+      //   version: "1.0",
+      //   source: "auth-service",
+      //   correlationId: "",
+      //   metadata: {
+      //     action: "token_revoked",
+      //     success: true,
+      //   },
+      // });
 
       logger.info("Token revoked successfully");
     } catch (error) {

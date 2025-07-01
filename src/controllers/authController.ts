@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import { Database } from "sqlite";
-import { login, register, verifyApiKey } from "../services/auth.services";
 import { createApiKey } from "../models/apiKey.model";
 
 export async function loginController(req: Request, res: Response, db: Database) {
   try {
     const { email, password } = req.body;
-    const result = await login(db, email, password);
+
+    // Get AuthService from app.locals
+    const authService = (req.app as any).locals.services.auth;
+    const result = await authService.login(email, password, req.ip, req.get("User-Agent"));
+
     req.session.user = { id: result.user.id, email: result.user.email, role: result.user.role };
     res.json(result);
   } catch (error: any) {
@@ -17,7 +20,11 @@ export async function loginController(req: Request, res: Response, db: Database)
 export async function registerController(req: Request, res: Response, db: Database) {
   try {
     const { email, password } = req.body;
-    const result = await register(db, email, password);
+
+    // Get AuthService from app.locals
+    const authService = (req.app as any).locals.services.auth;
+    const result = await authService.register(email, password, "");
+
     req.session.user = { id: result.user.id, email: result.user.email, role: result.user.role };
     res.status(201).json(result);
   } catch (error: any) {

@@ -25,7 +25,6 @@ import { AuthService } from "./services/auth.services";
 import { DocumentServiceRegistry } from "./services/registry.services";
 import { AutonomousDocumentService } from "./services/autonomous.docs.services";
 import { NotificationService } from "./services/notifications.services";
-import { WebhookService } from "./services/webhooks.services";
 
 const serviceCapability: ServiceCapability = {
   name: "AutonomousDocumentService",
@@ -42,14 +41,14 @@ export default async function createApp(db: Database): Promise<Express> {
   /** SOA/EBS INFRASTRUCTURE INITIALIZATION **/
 
   // Initialize Event Bus
-  const eventBus = new EventBus(redisClient, logger);
+  const eventBus = new EventBus(isRedisConnected() ? redisClient : null, logger);
   eventBus.use(generateEventIdMiddleware);
   eventBus.use(timestampMiddleware);
   eventBus.use(correlationMiddleware);
 
   // Initialize Enhanced Services
   const authService = new AuthService(db, eventBus, logger);
-  const serviceRegistry = new DocumentServiceRegistry(eventBus, logger);
+  const serviceRegistry = new DocumentServiceRegistry(isRedisConnected() ? redisClient : null, eventBus, logger);
   const documentService = new AutonomousDocumentService(db, serviceRegistry, eventBus, {} as ServiceCapability);
   const notificationService = new NotificationService(eventBus, serviceRegistry, logger);
   // const webhookService = new WebhookService(db, eventBus, logger);
@@ -99,6 +98,15 @@ export default async function createApp(db: Database): Promise<Express> {
   app.use((req: any, res: Response, next) => {
     req.correlationId = req.headers["x-correlation-id"] || `corr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     res.setHeader("X-Correlation-ID", req.correlationId);
+    next();
+  });
+
+  app.use((req: any, res: Response, next) => {
+    console.log(`🔍 INCOMING REQUEST:`);
+    console.log(`   Method: ${req.method}`);
+    console.log(`   URL: ${req.url}`);
+    console.log(`   Original URL: ${req.originalUrl}`);
+    console.log(`   Path: ${req.path}`);
     next();
   });
 
@@ -162,7 +170,7 @@ export default async function createApp(db: Database): Promise<Express> {
           },
         })
       );
-      logger.warn("⚠️ Using memory store for sessions as fallback");
+      logger.warn("Using memory store for sessions as fallback");
     }
   } else {
     app.use(
@@ -269,6 +277,7 @@ export default async function createApp(db: Database): Promise<Express> {
   // Your existing routes - enhanced with SOA services
   app.use("/api/v1/auth", authRoutes(db, authService));
   app.use("/api/v1/documents", documentRoutes(db, documentService));
+  console.log("DEBUG: Document routes registered");
   // app.use("/api/v1/webhooks", webhookRoutes(db, webhookService));
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

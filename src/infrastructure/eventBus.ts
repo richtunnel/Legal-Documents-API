@@ -60,14 +60,25 @@ export class EventBus implements IEventPublisher, IEventSubscriber {
   }
 
   async publishBatch<T extends BaseEvent>(events: T[]): Promise<void> {
-    const pipeline = this.redisClient.pipeline();
-
-    for (const event of events) {
-      const processedEvent = await this.applyMiddleware(event);
-      pipeline.publish(`events:${processedEvent.type}`, JSON.stringify(processedEvent));
+    if (!this.redisClient || !this.redisClient.pipeline) {
+      this.logger.warn("Redis client not available, skipping batch publish");
+      return;
     }
 
-    await pipeline.exec();
+    try {
+      const pipeline = this.redisClient.pipeline();
+
+      for (const event of events) {
+        const processedEvent = await this.applyMiddleware(event);
+        pipeline.publish(`events:${processedEvent.type}`, JSON.stringify(processedEvent));
+      }
+
+      await pipeline.exec();
+    } catch (error) {
+      this.logger.error("Failed to publish batch events", {
+        error: (error as Error).message,
+      });
+    }
   }
 
   // Subscribe to events
@@ -107,23 +118,32 @@ export class EventBus implements IEventPublisher, IEventSubscriber {
 
   // Redis subscriber setup
   private setupRedisSubscriber(): void {
-    const subscriber = this.redisClient.duplicate();
+    if (!this.redisClient || !this.redisClient.duplicate) {
+      this.logger.warn("Redis client not available, skipping Redis subscriber setup");
+      return;
+    }
 
-    subscriber.pSubscribe("events:*");
+    try {
+      const subscriber = this.redisClient.duplicate();
+      subscriber.pSubscribe("events:*");
 
-    subscriber.on("pmessage", async (pattern: string, channel: string, message: string) => {
-      try {
-        const event = JSON.parse(message) as BaseEvent;
-        const eventType = channel.replace("events:", "");
-
-        await this.handleEvent(eventType, event);
-      } catch (error) {
-        this.logger.error("Failed to process Redis event", {
-          channel,
-          error: (error as Error).message,
-        });
-      }
-    });
+      subscriber.on("pmessage", async (pattern: string, channel: string, message: string) => {
+        try {
+          const event = JSON.parse(message) as BaseEvent;
+          const eventType = channel.replace("events:", "");
+          await this.handleEvent(eventType, event);
+        } catch (error) {
+          this.logger.error("Failed to process Redis event", {
+            channel,
+            error: (error as Error).message,
+          });
+        }
+      });
+    } catch (error) {
+      this.logger.warn("Failed to setup Redis subscriber", {
+        error: (error as Error).message,
+      });
+    }
   }
 
   private async handleEvent(eventType: string, event: BaseEvent): Promise<void> {

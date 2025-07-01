@@ -7,6 +7,8 @@ import { authMiddleware } from "../middleware/auth";
 import { validateDocument, validate } from "../middleware/validate";
 import { CustomRequest } from "../types/types";
 
+console.log("🚀 Document routes file loaded");
+
 // Configure multer
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -24,8 +26,10 @@ export default function documentRoutes(db: Database, documentService?: Autonomou
   };
 
   // Upload document
-  router.post("/", upload.single("file"), validateDocument, validate, async (req: CustomRequest, res: Response): Promise<void> => {
+  router.post("/", authMiddleware(db), upload.single("file"), validateDocument, validate, async (req: CustomRequest, res: Response): Promise<void> => {
     try {
+      console.log("📄 POST /documents route hit, user:", req.user);
+
       if (!req.file) {
         res.status(400).json({
           success: false,
@@ -71,8 +75,10 @@ export default function documentRoutes(db: Database, documentService?: Autonomou
   });
 
   // Get all documents
-  router.get("/", async (req: CustomRequest, res: Response): Promise<void> => {
+  router.get("/", authMiddleware(db), async (req: CustomRequest, res: Response): Promise<void> => {
     try {
+      console.log("📄 GET /documents route hit, user:", req.user);
+
       if (!req.user?.id) {
         res.status(401).json({
           success: false,
@@ -108,8 +114,10 @@ export default function documentRoutes(db: Database, documentService?: Autonomou
   });
 
   // Get single document
-  router.get("/:id", async (req: CustomRequest, res: Response): Promise<void> => {
+  router.get("/:id", authMiddleware(db), async (req: CustomRequest, res: Response): Promise<void> => {
     try {
+      console.log("📄 GET /documents/:id route hit, user:", req.user);
+
       if (!req.user?.id) {
         res.status(401).json({
           success: false,
@@ -160,8 +168,10 @@ export default function documentRoutes(db: Database, documentService?: Autonomou
   });
 
   // Delete document
-  router.delete("/:id", async (req: CustomRequest, res: Response): Promise<void> => {
+  router.delete("/:id", authMiddleware(db), async (req: CustomRequest, res: Response): Promise<void> => {
     try {
+      console.log("📄 DELETE /documents/:id route hit, user:", req.user);
+
       if (!req.user?.id) {
         res.status(401).json({
           success: false,
