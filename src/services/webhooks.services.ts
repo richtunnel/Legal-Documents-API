@@ -1,63 +1,91 @@
-import { Router } from "express";
-import {
-  registerWebhookController,
-  getWebhooksController,
-  handleLegalDocumentWebhook,
-  handleEBSUpdateWebhook,
-  processDocumentStatusUpdate,
-  syncWithEBSController,
-} from "../controllers/webhookController";
-import { authMiddleware } from "../middleware/auth";
-import { validateDocument, validate, validateLegalDoc, validateEBSPayload } from "../middleware/validate";
 import { Database } from "sqlite";
+import { getWebhooksByUser } from "../models/webhook.model";
+import fetch from "node-fetch";
+import { EventBus } from "../infrastructure/eventBus";
+import { EventType } from "../types/events";
+import { logger } from "../utils/logger";
 
-export function webhookRoutes(db: Database, webhookService?: any) {
-  const router = Router();
+export class WebhookService {
+  constructor(private db: Database, private eventBus: EventBus, private logger: any) {}
 
-  // Apply auth middleware to all routes
-  router.use(authMiddleware(db));
+  async triggerWebhook(userId: number, eventType: string, payload: any): Promise<void> {
+    try {
+      const webhooks = await getWebhooksByUser(this.db, userId, eventType);
 
-  // Original webhook endpoints
-  router.post("/", validate, async (req, res) => {
-    await registerWebhookController(req, res, db);
-  });
+      const results = await Promise.allSettled(webhooks.map((webhook) => this.callWebhook(webhook.url, eventType, payload)));
 
-  router.get("/", async (req, res) => {
-    await getWebhooksController(req, res, db);
-  });
+      // Log results and publish events
+      results.forEach((result, index) => {
+        const webhook = webhooks[index];
 
-  // Legal document webhook endpoints
-  router.post("/legal-docs", validateLegalDoc, async (req, res) => {
-    await handleLegalDocumentWebhook(req, res, db);
-  });
+        if (result.status === "fulfilled") {
+          logger.info("Webhook called successfully", {
+            url: webhook.url,
+            eventType,
+            userId,
+          });
+        } else {
+          logger.error("Webhook call failed", {
+            url: webhook.url,
+            eventType,
+            userId,
+            error: result.reason,
+          });
+        }
+      });
 
-  // Handle specific legal document events
-  router.post("/legal-docs/status-update", validateLegalDoc, async (req, res) => {
-    await processDocumentStatusUpdate(req, res, db);
-  });
+      // Publish webhook events
+      await this.eventBus.publish({
+        id: "",
+        type: EventType.EMAIL_SENT, //create WEBHOOK_TRIGGERED event type
+        timestamp: "",
+        version: "1.0",
+        source: "webhook-service",
+        correlationId: "",
+        userId,
+        metadata: {
+          eventType,
+          webhookCount: webhooks.length,
+          successCount: results.filter((r) => r.status === "fulfilled").length,
+          failureCount: results.filter((r) => r.status === "rejected").length,
+        },
+      });
+    } catch (error) {
+      logger.error("Webhook triggering failed", {
+        userId,
+        eventType,
+        error: (error as Error).message,
+      });
+    }
+  }
 
-  // EBS integration endpoints
-  router.post("/ebs/update", validateEBSPayload, async (req, res) => {
-    await handleEBSUpdateWebhook(req, res, db);
-  });
+  private async callWebhook(url: string, eventType: string, payload: any): Promise<void> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-  // Sync data with EBS system
-  router.post("/ebs/sync", async (req, res) => {
-    await syncWithEBSController(req, res, db);
-  });
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "DocumentAPI-Webhook/2.0",
+        },
+        body: JSON.stringify({
+          event: eventType,
+          data: payload,
+          timestamp: new Date().toISOString(),
+        }),
+        signal: controller.signal, // 10 second timeout
+      });
 
-  // Health check for external systems
-  router.get("/health", (req, res) => {
-    res.status(200).json({
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      services: {
-        database: "connected",
-        legalDocsAPI: "available",
-        ebsIntegration: "active",
-      },
-    });
-  });
+      if (response) {
+        console.log("Webhook call successfull");
+      }
 
-  return router;
+      clearTimeout(timeoutId);
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      console.log(`Webhook failed with status`);
+    }
+  }
 }

@@ -7,7 +7,7 @@ import { authMiddleware } from "../middleware/auth";
 import { validateDocument, validate } from "../middleware/validate";
 import { CustomRequest } from "../types/types";
 
-console.log("🚀 Document routes file loaded");
+console.log("Document routes file loaded");
 
 // Configure multer
 const upload = multer({
