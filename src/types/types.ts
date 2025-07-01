@@ -37,6 +37,10 @@ export interface User {
   email: string;
   password: string;
   role: string;
+  title?: string;
+  last_login?: string;
+  blob_path?: string;
+  created_at?: string;
 }
 
 export interface ApiKey {
@@ -54,6 +58,7 @@ export interface Document {
   blob_path: string;
   created_at?: string;
   mimeType?: string;
+  mimetype?: string;
   size?: string;
 }
 
@@ -83,4 +88,73 @@ export interface ErrorResponse {
 export interface CustomRequest extends Request {
   session: Session & Partial<SessionData>;
   file?: Express.Multer.File;
+  user?: {
+    id: number;
+    email?: string;
+    role?: string;
+    name?: string;
+    created_at?: string;
+    last_login?: string;
+  };
+}
+
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: "Bearer";
+}
+
+export interface RefreshTokenData {
+  id: string;
+  userId: number;
+  token: string;
+  expiresAt: string;
+  created_at: string;
+  isRevoked: boolean;
+  deviceInfo?: string;
+}
+
+// SOA / EBS types
+export interface ServiceDefinition {
+  id: string;
+  name: string;
+  version: string;
+  endpoint: string;
+  port: number;
+  capabilities: ServiceCapability[];
+  health: ServiceHealth;
+  metadata: ServiceMetadata;
+  registeredAt?: string;
+  lastHeartbeat?: string;
+}
+
+export interface ServiceCapability {
+  name: string;
+  version: string;
+  description: string;
+  dependencies: string[];
+}
+
+export interface ServiceHealth {
+  status: "healthy" | "degraded" | "unhealthy";
+  checks: HealthCheck[];
+  lastChecked: string;
+  responseTime: number;
+}
+
+export interface HealthCheck {
+  name: string;
+  status: "pass" | "fail" | "warn";
+  output?: string;
+  responseTime: number;
+}
+
+export interface ServiceMetadata {
+  environment: string;
+  region?: string;
+  owner: string;
+  contact?: string;
+  tags?: string[];
+  description?: string;
 }

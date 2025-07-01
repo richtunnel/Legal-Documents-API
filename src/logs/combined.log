@@ -1,1 +1,7 @@
 {"level":"info","message":"Test server running on http://localhost:3000","timestamp":"2025-06-26 15:03:34"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-30 22:03:00"}
+{"level":"info","message":"Resolved database path: /Users/rstokes/Sites/Milestone/src/src/db/legal_documents.db","timestamp":"2025-06-30 22:03:00"}
+{"level":"info","message":"Running migrations from version 1 to 2","timestamp":"2025-06-30 22:03:00"}
+{"level":"info","message":"Migrating to version 2: Adding legal docs and EBS support","timestamp":"2025-06-30 22:03:00"}
+{"level":"info","message":"Database tables initialized successfully","timestamp":"2025-06-30 22:03:00"}
+{"level":"info","message":"Loaded environment configuration from .env.development for NODE_ENV=development","timestamp":"2025-06-30 22:03:34"}

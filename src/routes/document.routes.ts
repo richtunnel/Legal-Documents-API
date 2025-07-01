@@ -1,220 +1,216 @@
-import { Router, Response, NextFunction } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { Database } from "sqlite";
 import multer from "multer";
-import { uploadDocument, fetchDocuments, fetchDocument } from "../services/document.services";
+import { AutonomousDocumentService } from "../services/autonomous.docs.services";
+import { logger } from "../utils/logger";
 import { authMiddleware } from "../middleware/auth";
 import { validateDocument, validate } from "../middleware/validate";
-import { CustomRequest, ErrorResponse } from "../types/types";
-import { logger } from "../utils/logger";
-import { uploadDocumentController } from "../controllers/documentController";
+import { CustomRequest } from "../types/types";
 
+// Configure multer
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    // Optional: Add file type validation
-    const allowedMimeTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "image/jpeg", "image/png"];
-
-    if (allowedMimeTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error(`File type ${file.mimetype} not allowed`));
-    }
+    fileSize: 10 * 1024 * 1024, // 10MB
   },
 });
 
-export default function documentRoutes(db: Database) {
+export default function documentRoutes(db: Database, documentService?: AutonomousDocumentService): Router {
   const router = Router();
 
-  // Apply authMiddleware to all routes
-  router.use(authMiddleware(db));
+  // Get document service from app locals if not provided
+  const getDocumentService = (req: Request): AutonomousDocumentService => {
+    return documentService || req.app.locals.services.documents;
+  };
 
-  // Upload document route
-  router.post("/", upload.single("file"), validateDocument, validate, async (req: CustomRequest, res: Response, next: NextFunction): Promise<void> => {
+  // Upload document
+  router.post("/", upload.single("file"), validateDocument, validate, async (req: CustomRequest, res: Response): Promise<void> => {
     try {
-      await uploadDocumentController(req, res, db);
-    } catch (error: any) {
-      logger.error(`Upload document failed: ${error.message}`, {
-        userId: req.session.user?.id,
-        fileName: req.file?.originalname,
-        fileSize: req.file?.size,
-        error: error.stack,
+      if (!req.file) {
+        res.status(400).json({
+          success: false,
+          message: "No file provided",
+        });
+        return;
+      }
+
+      if (!req.user?.id) {
+        res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+        return;
+      }
+
+      const service = getDocumentService(req);
+      const correlationId = (req as any).correlationId;
+
+      const document = await service.uploadDocument(req.file, req.user.id, correlationId);
+
+      res.status(201).json({
+        success: true,
+        data: document,
+        metadata: {
+          correlationId,
+          serviceId: service.getServiceId(),
+        },
+        message: "Document uploaded successfully",
+      });
+    } catch (error) {
+      logger.error("Document upload failed", {
+        error: (error as Error).message,
+        userId: req.user?.id,
+        correlationId: (req as any).correlationId,
       });
 
-      // Handle specific multer errors
-      if (error.code === "LIMIT_FILE_SIZE") {
-        res.status(413).json({
-          message: "File too large. Maximum size is 10MB.",
-        } as ErrorResponse);
-        return;
-      }
-
-      if (error.message.includes("File type") && error.message.includes("not allowed")) {
-        res.status(400).json({
-          message: error.message,
-        } as ErrorResponse);
-        return;
-      }
-
       res.status(400).json({
-        message: error.message || "Failed to upload document",
-      } as ErrorResponse);
+        success: false,
+        message: (error as Error).message,
+      });
     }
   });
 
-  // Get all documents route
-  router.get("/", async (req: CustomRequest, res: Response, next: NextFunction): Promise<void> => {
+  // Get all documents
+  router.get("/", async (req: CustomRequest, res: Response): Promise<void> => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
-        logger.warn("Unauthorized access to get documents", {
-          ip: req.ip,
-          userAgent: req.get("User-Agent"),
-        });
+      if (!req.user?.id) {
         res.status(401).json({
+          success: false,
           message: "Unauthorized",
-        } as ErrorResponse);
+        });
         return;
       }
 
-      const documents = await fetchDocuments(db, userId);
-      logger.info(`Fetched ${documents.length} documents for user ${userId}`);
+      const service = getDocumentService(req);
+      const documents = await service.getDocuments(req.user.id);
 
       res.json({
         success: true,
         data: documents,
         total: documents.length,
+        metadata: {
+          serviceId: service.getServiceId(),
+          correlationId: (req as any).correlationId,
+        },
       });
-    } catch (error: any) {
-      logger.error(`Get documents failed: ${error.message}`, {
-        userId: req.session.user?.id,
-        error: error.stack,
+    } catch (error) {
+      logger.error("Failed to get documents", {
+        error: (error as Error).message,
+        userId: req.user?.id,
+        correlationId: (req as any).correlationId,
       });
+
       res.status(500).json({
+        success: false,
         message: "Failed to fetch documents",
-      } as ErrorResponse);
+      });
     }
   });
 
-  // Get single document route
-  router.get("/:id", async (req: CustomRequest, res: Response, next: NextFunction): Promise<void> => {
+  // Get single document
+  router.get("/:id", async (req: CustomRequest, res: Response): Promise<void> => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
-        logger.warn("Unauthorized access to get document", {
-          documentId: req.params.id,
-          ip: req.ip,
-          userAgent: req.get("User-Agent"),
-        });
+      if (!req.user?.id) {
         res.status(401).json({
+          success: false,
           message: "Unauthorized",
-        } as ErrorResponse);
+        });
         return;
       }
 
       const documentId = parseInt(req.params.id);
       if (isNaN(documentId)) {
-        logger.error("Invalid document ID provided", {
-          providedId: req.params.id,
-          userId,
-        });
         res.status(400).json({
+          success: false,
           message: "Invalid document ID",
-        } as ErrorResponse);
+        });
         return;
       }
 
-      const { document, file } = await fetchDocument(db, userId, documentId);
+      const service = getDocumentService(req);
+      const correlationId = (req as any).correlationId;
 
-      logger.info(`Document ${documentId} retrieved successfully`, {
-        userId,
-        documentTitle: document.title,
-        fileSize: file.length,
-      });
+      const result = await service.getDocument(req.user.id, documentId, correlationId);
 
-      // Set proper headers for file download
-      res.setHeader("Content-Type", document.mimeType || "application/pdf");
-      res.setHeader("Content-Length", file.length);
-      res.setHeader("Content-Disposition", `inline; filename="${document.title}"`);
-      res.setHeader("Cache-Control", "private, max-age=3600"); // Cache for 1 hour
-
-      res.send(file);
-    } catch (error: any) {
-      logger.error(`Get document failed: ${error.message}`, {
+      res.setHeader("Content-Type", result.document.mimetype || "application/pdf");
+      res.setHeader("Content-Length", result.file.length);
+      res.setHeader("Content-Disposition", `inline; filename="${result.document.title}"`);
+      res.setHeader("X-Service-ID", service.getServiceId());
+      res.send(result.file);
+    } catch (error) {
+      logger.error("Failed to get document", {
+        error: (error as Error).message,
         documentId: req.params.id,
-        userId: req.session.user?.id,
-        error: error.stack,
+        userId: req.user?.id,
+        correlationId: (req as any).correlationId,
       });
 
-      if (error.message.includes("not found") || error.message.includes("Document not found")) {
+      if ((error as Error).message.includes("not found")) {
         res.status(404).json({
+          success: false,
           message: "Document not found",
-        } as ErrorResponse);
-        return;
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: "Failed to retrieve document",
+        });
       }
-
-      res.status(500).json({
-        message: "Failed to retrieve document",
-      } as ErrorResponse);
     }
   });
 
-  // Optional: Add a route to get document metadata only (without file content)
-  router.get("/:id/metadata", async (req: CustomRequest, res: Response): Promise<void> => {
+  // Delete document
+  router.delete("/:id", async (req: CustomRequest, res: Response): Promise<void> => {
     try {
-      const userId = req.session.user?.id;
-      if (!userId) {
+      if (!req.user?.id) {
         res.status(401).json({
+          success: false,
           message: "Unauthorized",
-        } as ErrorResponse);
+        });
         return;
       }
 
       const documentId = parseInt(req.params.id);
       if (isNaN(documentId)) {
         res.status(400).json({
+          success: false,
           message: "Invalid document ID",
-        } as ErrorResponse);
+        });
         return;
       }
 
-      // Assuming you have a service method to get metadata only
-      // If not, you can modify fetchDocument to have an option for metadata only
-      const { document } = await fetchDocument(db, userId, documentId);
+      const service = getDocumentService(req);
+      const correlationId = (req as any).correlationId;
 
-      // Return only metadata, not the file
-      const metadata = {
-        id: document.id,
-        title: document.title,
-        mimeType: document.mimeType,
-        size: document.size,
-        uploadedAt: document.created_at,
-        // Add other metadata fields as needed
-      };
+      await service.deleteDocument(req.user.id, documentId, correlationId);
 
       res.json({
         success: true,
-        data: metadata,
+        message: "Document deleted successfully",
+        metadata: {
+          serviceId: service.getServiceId(),
+          correlationId,
+        },
       });
-    } catch (error: any) {
-      logger.error(`Get document metadata failed: ${error.message}`, {
+    } catch (error) {
+      logger.error("Failed to delete document", {
+        error: (error as Error).message,
         documentId: req.params.id,
-        userId: req.session.user?.id,
-        error: error.stack,
+        userId: req.user?.id,
+        correlationId: (req as any).correlationId,
       });
 
-      if (error.message.includes("not found")) {
+      if ((error as Error).message.includes("not found")) {
         res.status(404).json({
+          success: false,
           message: "Document not found",
-        } as ErrorResponse);
-        return;
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: "Failed to delete document",
+        });
       }
-
-      res.status(500).json({
-        message: "Failed to retrieve document metadata",
-      } as ErrorResponse);
     }
   });
 

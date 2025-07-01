@@ -12,6 +12,7 @@ interface EnvConfig {
   JWT_SECRET: string;
   BLOB_STORAGE_PATH: string;
   WEBHOOK_TIMEOUT: number;
+  JWT_REFRESH_SECRET: string;
 }
 
 // Validate environment variables and return a typed config object
@@ -35,7 +36,7 @@ function loadConfig(): EnvConfig {
       throw new Error(`Unknown environment: ${env}`);
   }
 
-  const envPath = resolve(process.cwd(), envFile);
+  const envPath = resolve(__dirname, "../", envFile);
   const result = dotenv.config({ path: envPath });
 
   if (result.error) {
@@ -76,6 +77,7 @@ function loadConfig(): EnvConfig {
     JWT_SECRET: process.env.JWT_SECRET!,
     BLOB_STORAGE_PATH: process.env.BLOB_STORAGE_PATH!,
     WEBHOOK_TIMEOUT: webhookTimeout,
+    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
   };
 }
 
