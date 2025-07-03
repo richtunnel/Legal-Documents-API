@@ -73,9 +73,7 @@ export default async function createApp(db: Database): Promise<Express> {
     serviceRegistry: serviceRegistry,
   };
 
-  // ============================================
   // SECURITY & MIDDLEWARE
-  // ============================================
 
   app.use(
     helmet({
@@ -114,11 +112,16 @@ export default async function createApp(db: Database): Promise<Express> {
   app.use((req: any, res: Response, next) => {
     const startTime = Date.now();
 
+    // CAPTURE THE URL NOW, not later
+    const originalUrl = req.url;
+    const originalPath = req.path;
+
     res.on("finish", () => {
       const duration = Date.now() - startTime;
       logger.info("API Request", {
         method: req.method,
-        url: req.url,
+        url: originalUrl, // Use captured URL
+        path: originalPath, // Add path for debugging
         statusCode: res.statusCode,
         duration: `${duration}ms`,
         correlationId: req.correlationId,
@@ -189,10 +192,7 @@ export default async function createApp(db: Database): Promise<Express> {
     logger.warn("⚠️ Redis not connected, using memory store for sessions");
   }
 
-  // ============================================
   // RATE LIMITING WITH SOA AWARENESS
-  // ============================================
-
   let documentRateLimiter;
 
   if (isRedisConnected()) {
@@ -458,7 +458,7 @@ export default async function createApp(db: Database): Promise<Express> {
   process.on("SIGINT", () => gracefulShutdown("SIGINT"));
   process.on("SIGUSR2", () => gracefulShutdown("SIGUSR2")); // nodemon restart
 
-  logger.info("✅ Legal Documents API v6 with SOA/EBS initialized successfully");
+  logger.info("Legal Documents API v6 with SOA/EBS initialized successfully");
 
   return app;
 }

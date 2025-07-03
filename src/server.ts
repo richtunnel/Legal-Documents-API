@@ -53,7 +53,6 @@ async function startServer() {
   try {
     logger.info("server initialization...");
 
-    // Load environment configuration
     logger.info("Loading environment configuration...");
     const envConfig = await config;
     logger.info(`Environment loaded:`, {
@@ -91,12 +90,12 @@ async function startServer() {
       serverContext.redisConnected = false;
     }
 
-    // 4. Create Express app
+    // Create Express app
     logger.info("Creating Express app...");
     const app = await createApp(db);
     logger.info("Express app created successfully");
 
-    // 5. Start HTTP server
+    // Start HTTP server
     const port = envConfig.PORT || 3000;
     logger.info(`Starting HTTP server on port ${port}...`);
 
@@ -159,7 +158,7 @@ async function startServer() {
     }
 
     // 9. Log startup summary
-    logger.info("🎯 Server initialization completed successfully", {
+    logger.info("Server initialization completed successfully", {
       services: {
         http: "running",
         database: "connected",

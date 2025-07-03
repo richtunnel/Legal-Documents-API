@@ -15,7 +15,6 @@ interface EnvConfig {
   JWT_REFRESH_SECRET: string;
 }
 
-// Validate environment variables and return a typed config object
 function loadConfig(): EnvConfig {
   const env = (process.env.NODE_ENV || "development") as "development" | "production" | "test";
 
@@ -46,7 +45,6 @@ function loadConfig(): EnvConfig {
 
   logger.info(`Loaded environment configuration from ${envFile} for NODE_ENV=${env}`);
 
-  // Validate required environment variables
   const requiredVars = ["DATABASE_URL", "REDIS_URL", "SESSION_SECRET", "JWT_SECRET", "BLOB_STORAGE_PATH"];
   for (const key of requiredVars) {
     if (!process.env[key]) {
@@ -55,7 +53,6 @@ function loadConfig(): EnvConfig {
     }
   }
 
-  // Validate JWT_SECRET length
   if (process.env.JWT_SECRET!.length < 32) {
     logger.error("JWT_SECRET must be at least 32 characters");
     throw new Error("JWT_SECRET must be at least 32 characters");
@@ -81,5 +78,4 @@ function loadConfig(): EnvConfig {
   };
 }
 
-// Export the validated config
 export const config = loadConfig();

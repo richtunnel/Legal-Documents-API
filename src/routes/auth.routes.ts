@@ -182,7 +182,7 @@ export default function authRoutes(db: Database, authService?: AuthService): Rou
     }
   });
 
-  // Verify API key endpoint (for your existing API key flow)
+  // Verify API key endpoint
   router.post("/verify-api-key", async (req: Request, res: Response): Promise<void> => {
     try {
       const { apiKey } = req.body;

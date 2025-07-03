@@ -40,8 +40,6 @@ export class NotificationService {
     }
 
     this.logger.info("NotificationService stopping...");
-    // Add cleanup logic here
-
     this.isStarted = false;
     this.logger.info("NotificationService stopped");
   }
@@ -52,7 +50,6 @@ export class NotificationService {
     }
 
     this.logger.info(`Notification [${type}]: ${message}`, recipient ? `to ${recipient}` : "");
-    // Add your notification logic here
   }
 
   async sendEmail(to: string, subject: string, body: string): Promise<void> {
@@ -61,7 +58,6 @@ export class NotificationService {
     }
 
     this.logger.info(`Email to ${to}: ${subject}`);
-    // Add email sending logic here
   }
 
   async sendSMS(to: string, message: string): Promise<void> {
